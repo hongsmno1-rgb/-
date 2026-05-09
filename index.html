@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✝ 성경 암기 도우미</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ivory:#f8f4ee;--card:#fffdf9;
+  --forest:#2c5f2e;--forest-l:#e8f0e9;--forest-d:#1e4220;
+  --gold:#b5893a;--gold-l:#fdf6e8;
+  --text:#1c1c1c;--muted:#7a7060;--border:#e2dbd0;
+  --red:#a83228;--red-l:#fdf0ee;
+  --ok:#2d6e35;--ok-l:#eaf5eb;
+  --shadow-sm:0 1px 8px rgba(44,95,46,.10);
+  --shadow:0 4px 20px rgba(44,95,46,.12);
+  --r:14px;
+}
+body{font-family:'Nanum Gothic',sans-serif;background:var(--ivory);color:var(--text);min-height:100vh;padding-bottom:64px;background-image:radial-gradient(ellipse 120% 80% at 50% -10%,rgba(44,95,46,.07) 0%,transparent 60%)}
+.wrap{max-width:700px;margin:0 auto;padding:20px 16px}
+.site-header{text-align:center;padding:36px 0 28px}
+.site-header .cross{font-size:28px;display:block;margin-bottom:12px}
+.site-header h1{font-family:'Noto Serif KR',serif;font-size:24px;font-weight:700;color:var(--forest);letter-spacing:-.3px}
+.site-header p{font-size:13px;color:var(--muted);margin-top:6px}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 0 20px}
+.card{background:var(--card);border-radius:var(--r);padding:22px 20px;box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:14px}
+.card-hd{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--forest);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.card-hd-left{display:flex;align-items:center;gap:6px}
+
+/* API KEY */
+.key-card{background:var(--gold-l);border:1.5px solid rgba(181,137,58,.25);border-radius:var(--r);padding:16px 18px;margin-bottom:14px}
+.key-card .card-hd{color:var(--gold)}
+.key-row{display:flex;gap:8px}
+.key-inp{font-family:monospace!important;font-size:12px!important;letter-spacing:.3px}
+.key-status{font-size:11px;margin-top:5px}
+.key-status.ok{color:var(--ok)}.key-status.err{color:var(--red)}
+.key-note{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.6}
+.btn-key{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-family:'Nanum Gothic',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .15s}
+.btn-key:hover{background:#9a7530}
+
+/* FORM */
+.row{display:flex;gap:8px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;flex:1}
+.field.sm{flex:0 0 82px}.field.xs{flex:0 0 64px}
+label{font-size:10px;font-weight:800;letter-spacing:.6px;color:var(--muted);text-transform:uppercase}
+input,select{border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:'Nanum Gothic',sans-serif;color:var(--text);background:#fff;width:100%;transition:border-color .15s,box-shadow .15s;outline:none}
+input:focus,select:focus{border-color:var(--forest);box-shadow:0 0 0 3px rgba(44,95,46,.08)}
+input[type=number]::-webkit-inner-spin-button{opacity:.5}
+
+/* DROPDOWN */
+.book-wrap{position:relative}
+#bsDrop{position:absolute;top:calc(100% + 3px);left:0;right:0;background:#fff;border:1.5px solid var(--forest);border-radius:10px;max-height:190px;overflow-y:auto;z-index:300;box-shadow:var(--shadow);display:none}
+#bsDrop.open{display:block}
+.dd-item{padding:9px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .1s}
+.dd-item:last-child{border-bottom:none}
+.dd-item:hover,.dd-item.chosen{background:var(--forest-l);color:var(--forest);font-weight:700}
+.dd-empty{padding:12px 14px;font-size:12px;color:var(--muted);font-style:italic}
+
+/* BUTTONS */
+.btn-add{background:var(--forest);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-family:'Nanum Gothic',sans-serif;font-weight:700;cursor:pointer;min-width:60px;transition:background .15s}
+.btn-add:hover{background:var(--forest-d)}
+.btn-add:disabled{background:#c0bab0;cursor:not-allowed}
+.gen-wrap{margin-top:4px;text-align:center}
+.btn-gen{background:var(--forest);color:#fff;padding:14px 48px;font-size:15px;font-weight:800;border-radius:12px;border:none;cursor:pointer;box-shadow:0 4px 18px rgba(44,95,46,.28);transition:all .2s;font-family:'Nanum Gothic',sans-serif}
+.btn-gen:hover{background:var(--forest-d);transform:translateY(-1px);box-shadow:0 6px 22px rgba(44,95,46,.36)}
+.btn-gen:disabled{background:#b8b0a5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* VERSE CHIPS */
+.verse-list{display:flex;flex-direction:column;gap:6px}
+.verse-chip{display:flex;align-items:center;justify-content:space-between;background:var(--forest-l);border-radius:9px;padding:9px 14px;border:1px solid rgba(44,95,46,.15)}
+.chip-ref{font-size:13px;font-weight:700;color:var(--forest)}
+.chip-sub{font-size:10px;color:var(--muted);margin-left:6px}
+.v-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:17px;line-height:1;padding:0 3px;transition:color .15s}
+.v-del:hover{color:var(--red)}
+.empty-note{text-align:center;font-size:13px;color:var(--muted);padding:14px 0;font-style:italic}
+.count-line{text-align:right;font-size:11px;color:var(--muted);margin-top:6px}
+.sel-hint{font-size:11px;color:var(--muted);padding:2px 0;margin-top:-2px}
+.err-msg{background:var(--red-l);color:var(--red);border-radius:8px;padding:9px 12px;font-size:12px;margin-top:6px;border:1px solid rgba(168,50,40,.15)}
+
+/* ── SAVED LISTS ── */
+.list-panel{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.list-panel:empty{display:none}
+.list-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--forest-l);border-radius:10px;
+  padding:10px 14px;border:1px solid rgba(44,95,46,.15);
+  cursor:pointer;transition:all .15s;
+}
+.list-item:hover{background:#d4e7d5;border-color:rgba(44,95,46,.3)}
+.list-item-info{flex:1;min-width:0}
+.list-item-name{font-size:13px;font-weight:800;color:var(--forest);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.list-item-btns{display:flex;gap:4px;flex-shrink:0}
+.list-icon-btn{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  padding:4px 7px;font-size:11px;cursor:pointer;color:var(--muted);
+  transition:all .12s;line-height:1;
+}
+.list-icon-btn:hover{border-color:var(--forest);color:var(--forest);background:var(--forest-l)}
+.list-icon-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-l)}
+.list-empty{font-size:12px;color:var(--muted);font-style:italic;text-align:center;padding:10px 0}
+.list-full{font-size:11px;color:var(--muted);text-align:right;margin-top:4px}
+
+/* INLINE EDIT */
+.list-edit-row{display:flex;gap:6px;align-items:center}
+.list-edit-inp{
+  flex:1;border:1.5px solid var(--forest);border-radius:7px;
+  padding:6px 10px;font-size:13px;font-family:'Nanum Gothic',sans-serif;
+  font-weight:700;color:var(--forest);outline:none;
+}
+.list-edit-ok{background:var(--forest);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-family:'Nanum Gothic',sans-serif;font-weight:700;cursor:pointer}
+.list-edit-ok:hover{background:var(--forest-d)}
+.list-edit-cancel{background:none;border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--muted)}
+
+/* LOADING */
+.loading-box{text-align:center;padding:64px 20px}
+.spinner{width:42px;height:42px;border:3px solid var(--forest-l);border-top-color:var(--forest);border-radius:50%;animation:spin .85s linear infinite;margin:0 auto 18px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-t{color:var(--forest);font-size:15px;font-weight:700}
+.loading-s{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.8}
+.loading-prog{width:200px;height:4px;background:var(--border);border-radius:10px;margin:16px auto 0;overflow:hidden}
+.loading-prog-fill{height:100%;background:var(--forest);border-radius:10px;animation:prog 2s ease-in-out infinite}
+@keyframes prog{0%{width:5%}50%{width:65%}100%{width:95%}}
+
+/* QUIZ */
+.quiz-toprow{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.q-count{font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
+.ref-pill{background:var(--forest-l);color:var(--forest);font-size:11px;font-weight:800;padding:4px 11px;border-radius:20px}
+.prog-rail{background:var(--border);border-radius:10px;height:4px;margin-bottom:22px}
+.prog-fill{background:var(--forest);border-radius:10px;height:100%;transition:width .4s ease}
+.q-verse{font-family:'Noto Serif KR',serif;font-size:20px;line-height:2.8;color:var(--text);word-break:keep-all;margin-bottom:22px}
+.blank-inp{display:inline-block;border:none;border-bottom:2px solid var(--forest);background:transparent;font-family:'Noto Serif KR',serif;font-size:20px;color:var(--forest);font-weight:700;text-align:center;min-width:76px;width:76px;outline:none;padding:0 4px;margin:0 1px;vertical-align:baseline;transition:border-color .15s,color .15s}
+.blank-inp:focus{border-bottom-color:var(--gold);color:var(--text)}
+.blank-inp.inp-ok{color:var(--ok);border-bottom-color:var(--ok)}
+.blank-inp.inp-err{color:var(--red);border-bottom-color:var(--red);text-decoration:line-through}
+.ans-hint{font-size:11px;font-weight:800;vertical-align:super;margin-left:1px;font-family:'Nanum Gothic',sans-serif}
+.ans-hint.ok{color:var(--ok)}.ans-hint.err{color:var(--red)}
+.full-verse{margin-top:16px;padding:14px 16px;background:var(--gold-l);border-radius:9px;border:1px solid rgba(181,137,58,.2);border-left:3px solid var(--gold);font-family:'Noto Serif KR',serif;font-size:14px;color:var(--muted);line-height:1.9}
+.fv-lbl{font-size:10px;font-weight:800;letter-spacing:.5px;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.nav-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px}
+.btn-nav{background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;color:var(--text);transition:all .15s;font-family:'Nanum Gothic',sans-serif}
+.btn-nav:hover:not(:disabled){border-color:var(--forest);color:var(--forest);background:var(--forest-l)}
+.btn-nav:disabled{opacity:.3;cursor:not-allowed}
+.nav-num{font-size:12px;color:var(--muted);min-width:56px;text-align:center}
+.score-banner{background:linear-gradient(135deg,var(--forest-l),var(--gold-l));border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;border:1px solid rgba(44,95,46,.12)}
+.sb-pct{font-size:26px;font-weight:800;color:var(--forest);line-height:1}
+.sb-msg{font-size:13px;font-weight:700;color:var(--text)}
+.sb-det{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ACTIONS 2x2 */
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:4px;padding-top:16px;border-top:1px solid var(--border)}
+.act-col{display:flex;flex-direction:column;align-items:center;gap:5px}
+.act-btn{width:100%;border:1.5px solid var(--border);background:#fff;border-radius:10px;padding:11px 6px;font-size:13px;font-weight:700;cursor:pointer;color:var(--text);transition:all .15s;font-family:'Nanum Gothic',sans-serif}
+.act-btn:hover{border-color:var(--forest);background:var(--forest-l);color:var(--forest)}
+.act-btn.act-score{border-color:var(--gold);color:var(--gold)}
+.act-btn.act-score:hover{background:var(--gold-l)}
+.act-btn.act-done{border-color:var(--ok);color:var(--ok);background:var(--ok-l)}
+.act-btn.act-save{border-color:var(--forest);color:var(--forest)}
+.act-btn.act-save:hover{background:var(--forest-l)}
+.act-btn.act-save:disabled{border-color:var(--border);color:var(--muted);background:#fff;cursor:not-allowed}
+.act-desc{font-size:10px;color:var(--muted);text-align:center;line-height:1.4;max-width:140px}
+
+/* SCORE PAGE */
+.score-page{text-align:center;padding:40px 20px}
+.score-ring{width:116px;height:116px;border-radius:50%;border:5px solid var(--forest);background:var(--forest-l);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 22px;box-shadow:0 0 0 8px rgba(44,95,46,.07)}
+.score-pct{font-size:30px;font-weight:800;color:var(--forest);line-height:1}
+.score-frac{font-size:11px;color:var(--muted);margin-top:2px}
+.score-msg{font-size:19px;font-weight:800;margin-bottom:8px}
+.score-det{font-size:13px;color:var(--muted);margin-bottom:32px}
+.score-btns{display:flex;gap:12px;justify-content:center}
+.btn-retry{background:var(--forest);color:#fff;padding:12px 30px;border-radius:10px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:'Nanum Gothic',sans-serif;transition:background .15s}
+.btn-retry:hover{background:var(--forest-d)}
+.btn-reset{background:#fff;border:1.5px solid var(--border);color:var(--text);padding:12px 30px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Nanum Gothic',sans-serif;transition:all .15s}
+.btn-reset:hover{border-color:var(--forest);color:var(--forest)}
+
+@media(max-width:500px){
+  /* 구절 선택 입력 폼: 세로 1열 배치 */
+  .row{flex-direction:column;gap:6px}
+  .field.sm,.field.xs,.field{flex:1 1 auto;width:100%}
+  .field.book-wrap{width:100%}
+  /* 추가 버튼 전체 너비 */
+  .btn-add{width:100%;padding:11px 16px}
+  /* 퀴즈 폰트 */
+  .q-verse{font-size:17px}.blank-inp{font-size:17px;min-width:62px;width:62px}
+  .actions{gap:6px}.act-btn{font-size:12px;padding:9px 4px}
+  .btn-gen{padding:13px 32px;font-size:14px}
+}
+.fade-in{animation:fadein .3s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="site-header">
+    <span class="cross">✝</span>
+    <h1>성경 암기 도우미</h1>
+    <p>개역개정 원문 자동 조회 · 빈칸 채우기 문제 생성</p>
+  </div>
+  <div class="divider"></div>
+
+  <div class="key-card">
+    <div class="card-hd"><span style="display:flex;align-items:center;gap:6px">🔑 Anthropic API Key</span></div>
+    <div class="key-row">
+      <input type="password" id="keyInp" class="key-inp" placeholder="sk-ant-api03-...">
+      <button class="btn-key" id="keyBtn">저장</button>
+    </div>
+    <div class="key-status" id="keyStat"></div>
+    <div class="key-note">🔒 키는 이 페이지 메모리에만 저장됩니다 &nbsp;·&nbsp; 발급: <a href="https://console.anthropic.com/" target="_blank" style="color:var(--gold)">console.anthropic.com</a> → API Keys</div>
+  </div>
+
+  <div id="app" class="fade-in"></div>
+</div>
+<script>
+// ═══════════════════════════════════
+// BOOKS
+// ═══════════════════════════════════
+const BOOKS=[
+  {n:'창세기',c:50},{n:'출애굽기',c:40},{n:'레위기',c:27},{n:'민수기',c:36},{n:'신명기',c:34},
+  {n:'여호수아',c:24},{n:'사사기',c:21},{n:'룻기',c:4},{n:'사무엘상',c:31},{n:'사무엘하',c:24},
+  {n:'열왕기상',c:22},{n:'열왕기하',c:25},{n:'역대상',c:29},{n:'역대하',c:36},{n:'에스라',c:10},
+  {n:'느헤미야',c:13},{n:'에스더',c:10},{n:'욥기',c:42},{n:'시편',c:150},{n:'잠언',c:31},
+  {n:'전도서',c:12},{n:'아가',c:8},{n:'이사야',c:66},{n:'예레미야',c:52},{n:'예레미야애가',c:5},
+  {n:'에스겔',c:48},{n:'다니엘',c:12},{n:'호세아',c:14},{n:'요엘',c:3},{n:'아모스',c:9},
+  {n:'오바댜',c:1},{n:'요나',c:4},{n:'미가',c:7},{n:'나훔',c:3},{n:'하박국',c:3},
+  {n:'스바냐',c:3},{n:'학개',c:2},{n:'스가랴',c:14},{n:'말라기',c:4},
+  {n:'마태복음',c:28},{n:'마가복음',c:16},{n:'누가복음',c:24},{n:'요한복음',c:21},{n:'사도행전',c:28},
+  {n:'로마서',c:16},{n:'고린도전서',c:16},{n:'고린도후서',c:13},{n:'갈라디아서',c:6},{n:'에베소서',c:6},
+  {n:'빌립보서',c:4},{n:'골로새서',c:4},{n:'데살로니가전서',c:5},{n:'데살로니가후서',c:3},
+  {n:'디모데전서',c:6},{n:'디모데후서',c:4},{n:'디도서',c:3},{n:'빌레몬서',c:1},{n:'히브리서',c:13},
+  {n:'야고보서',c:5},{n:'베드로전서',c:5},{n:'베드로후서',c:3},{n:'요한1서',c:5},
+  {n:'요한2서',c:1},{n:'요한3서',c:1},{n:'유다서',c:1},{n:'요한계시록',c:22}
+];
+
+// ═══════════════════════════════════
+// 초성 검색
+// ═══════════════════════════════════
+const CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function getChosung(s){return[...s].map(c=>{const n=c.charCodeAt(0)-0xAC00;return(n>=0&&n<=11171)?CHO[Math.floor(n/28/21)]:c;}).join('')}
+function matchBook(name,q){
+  if(!q||!q.trim())return true;q=q.trim();
+  if(name.includes(q))return true;
+  const nc=getChosung(name),isJamo=[...q].every(c=>CHO.includes(c));
+  return nc.startsWith(isJamo?q:getChosung(q));
+}
+
+// ═══════════════════════════════════
+// SAVED LISTS (localStorage)
+// ═══════════════════════════════════
+const LS_KEY='bible_memorizer_lists';
+const MAX_LISTS=3;
+
+function loadLists(){
+  try{return JSON.parse(localStorage.getItem(LS_KEY))||[];}catch{return [];}
+}
+function saveLists(lists){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(lists));}catch(e){console.error(e);}
+}
+function getLists(){return loadLists();}
+
+function addList(name, verses){
+  const lists=loadLists();
+  if(lists.length>=MAX_LISTS)return false;
+  lists.push({id:Date.now(),name:name.trim()||`목록 ${lists.length+1}`,verses:verses.map(v=>({ref:v.ref}))});
+  saveLists(lists);return true;
+}
+function deleteList(id){
+  const lists=loadLists().filter(l=>l.id!==id);
+  saveLists(lists);
+}
+function renameList(id, newName){
+  const lists=loadLists();
+  const l=lists.find(l=>l.id===id);
+  if(l){l.name=newName.trim()||l.name;saveLists(lists);}
+}
+function updateListVerses(id, verses){
+  const lists=loadLists();
+  const l=lists.find(l=>l.id===id);
+  if(l){l.verses=verses.map(v=>({ref:v.ref}));saveLists(lists);}
+}
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+let API_KEY='';
+let S={
+  phase:'input', verses:[], search:'', selBook:null, selCh:1, selV:1,
+  questions:[], qIdx:0, inputs:{}, revealed:false, score:null,
+  errMsg:'', loadMsg:'',
+  editingListId:null,  // 수정 중인 리스트 id
+};
+
+// ═══════════════════════════════════
+// UTILS
+// ═══════════════════════════════════
+function h(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function v(s){return(s||'').replace(/"/g,'&quot;')}
+function $(id){return document.getElementById(id)}
+function scoreMsg(p){return p===100?'🏆 완벽합니다!':p>=80?'🎉 훌륭해요!':p>=60?'👍 잘 하고 있어요!':p>=40?'💪 조금 더 연습해봐요!':'📖 처음부터 다시 외워봐요!'}
+function normAns(s){return(s||'').trim().replace(/\s+/g,' ')}
+function cntBlanks(t){return(t.match(/_____/g)||[]).length}
+function getBlankCount(text){
+  const n=(text||'').trim().split(/\s+/).filter(Boolean).length;
+  if(n<6)return 3;if(n<10)return 4;if(n<15)return 5;return 6;
+}
+
+// ═══════════════════════════════════
+// JS 빈칸 생성 (폴백)
+// ═══════════════════════════════════
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function jsGenQuestions(verseText,ref,count=1){
+  const words=verseText.trim().split(/\s+/).filter(Boolean);
+  const target=getBlankCount(verseText);
+  const qs=[];let prevSet=null;
+  for(let q=0;q<count;q++){
+    let chosen=[];
+    for(let att=0;att<100&&chosen.length<target;att++){
+      const sh=shuffle([...Array(words.length).keys()]);chosen=[];
+      for(const idx of sh){if(chosen.length===target)break;if(!chosen.includes(idx-1)&&!chosen.includes(idx+1))chosen.push(idx);}
+    }
+    if(prevSet&&prevSet.size>0){
+      const ov=chosen.filter(i=>prevSet.has(i));
+      if(ov.length>1)for(const bad of ov.slice(1)){const alts=[...Array(words.length).keys()].filter(c=>!new Set(chosen).has(c)&&!prevSet.has(c)&&!chosen.includes(c-1)&&!chosen.includes(c+1));if(alts.length)chosen[chosen.indexOf(bad)]=alts[Math.floor(Math.random()*alts.length)];}
+    }
+    chosen.sort((a,b)=>a-b);prevSet=new Set(chosen);
+    const bs=new Set(chosen);
+    qs.push({ref,verseText,blankedText:words.map((w,i)=>bs.has(i)?'_____':w).join(' '),answers:chosen.map(i=>words[i])});
+  }
+  return qs;
+}
+
+// ═══════════════════════════════════
+// API KEY
+// ═══════════════════════════════════
+function setupApiKey(){
+  const inp=$('keyInp'),btn=$('keyBtn'),stat=$('keyStat');
+  if(!inp||!btn)return;
+
+  function applyKey(key){
+    API_KEY=key;
+    inp.value=key.slice(0,16)+'••••••••••••••••••••';
+    stat.textContent='✓ 저장됨 (이 기기에서 자동 로드)';stat.className='key-status ok';
+    btn.textContent='변경';
+    btn.onclick=()=>{
+      inp.value='';API_KEY='';
+      localStorage.removeItem('bible_api_key');
+      stat.textContent='';btn.textContent='저장';btn.onclick=null;
+      setupApiKey();
+    };
+  }
+
+  // 저장된 키 자동 불러오기
+  const saved=localStorage.getItem('bible_api_key');
+  if(saved&&saved.startsWith('sk-ant-')){applyKey(saved);return;}
+
+  function save(){
+    const key=inp.value.trim();
+    if(!key.startsWith('sk-ant-')){stat.textContent='⚠ sk-ant- 로 시작하는 키를 입력해주세요';stat.className='key-status err';return;}
+    localStorage.setItem('bible_api_key',key);
+    applyKey(key);
+  }
+  btn.addEventListener('click',save);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
+}
+
+// ═══════════════════════════════════
+// SAVED LIST PANEL HTML (공용)
+// ═══════════════════════════════════
+function renderListPanel(context){
+  // context: 'input' | 'quiz'
+  const lists=getLists();
+  if(!lists.length&&context==='input') return '';  // 입력화면은 목록 없으면 숨김
+
+  let items='';
+  if(!lists.length){
+    items=`<div class="list-empty">저장된 목록이 없습니다</div>`;
+  } else {
+    items=lists.map(l=>{
+      if(S.editingListId===l.id){
+        // 인라인 수정 UI
+        return`<div class="list-edit-row" data-lid="${l.id}">
+          <input class="list-edit-inp" id="editInp_${l.id}" value="${v(l.name)}" maxlength="20">
+          <button class="list-edit-ok" data-ok="${l.id}">저장</button>
+          <button class="list-edit-cancel" data-cancel="${l.id}">취소</button>
+        </div>`;
+      }
+      return`<div class="list-item" data-load="${l.id}">
+        <div class="list-item-info">
+          <div class="list-item-name">${h(l.name)}</div>
+          <div class="list-item-meta">구절 ${l.verses.length}개 · 문제 ${l.verses.length*5}개</div>
+        </div>
+        <div class="list-item-btns" onclick="event.stopPropagation()">
+          <button class="list-icon-btn" data-edit="${l.id}" title="이름 수정">✏️</button>
+          <button class="list-icon-btn" data-update="${l.id}" title="현재 구절로 덮어쓰기">🔄</button>
+          <button class="list-icon-btn del" data-del="${l.id}" title="삭제">×</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const canAdd=lists.length<MAX_LISTS&&S.verses.length>0;
+  const addBtn=context==='input'
+    ?`<div style="text-align:right;margin-top:${lists.length?'8px':'0'}">
+        <button class="list-icon-btn${canAdd?'':''}" id="saveListBtn" ${!canAdd?'disabled':''} style="font-size:12px;padding:6px 12px;${canAdd?'border-color:var(--forest);color:var(--forest)':''}">
+          + 현재 목록 저장 ${lists.length}/${MAX_LISTS}
+        </button>
+      </div>`
+    :'';
+
+  return`<div class="list-panel" id="listPanel">${items}${addBtn}</div>`;
+}
+
+// ═══════════════════════════════════
+// DROPDOWN
+// ═══════════════════════════════════
+function buildDrop(){
+  let dd=$('bsDrop');
+  if(!dd){const w=document.querySelector('.book-wrap');if(!w)return;dd=document.createElement('div');dd.id='bsDrop';w.appendChild(dd);}
+  const q=S.search.trim();
+  if(!q){dd.classList.remove('open');return;}
+  const f=BOOKS.filter(b=>matchBook(b.n,q));
+  dd.innerHTML=!f.length?'<div class="dd-empty">검색 결과 없음</div>'
+    :f.slice(0,12).map(b=>`<div class="dd-item${S.selBook===b.n?' chosen':''}" data-book="${v(b.n)}">${h(b.n)}</div>`).join('')
+      +(f.length>12?`<div class="dd-empty">외 ${f.length-12}개</div>`:'');
+  dd.querySelectorAll('.dd-item[data-book]').forEach(el=>{el.addEventListener('mousedown',e=>{e.preventDefault();selectBook(el.dataset.book);});});
+  dd.classList.add('open');
+}
+function hideDrop(){const d=$('bsDrop');if(d)d.classList.remove('open');}
+
+// ═══════════════════════════════════
+// RENDER
+// ═══════════════════════════════════
+function render(){
+  const app=$('app');if(!app)return;
+  switch(S.phase){
+    case 'input':   app.innerHTML=renderInput();   break;
+    case 'loading': app.innerHTML=renderLoading(); break;
+    case 'quiz':    app.innerHTML=renderQuiz();    break;
+    case 'score':   app.innerHTML=renderScore();   break;
+  }
+  app.className='fade-in';
+  if(S.phase==='input')  setupInput();
+  if(S.phase==='quiz')   setupQuiz();
+  if(S.phase==='score')  setupScore();
+  // 리스트 패널 공통 이벤트
+  bindListEvents();
+}
+
+// ── INPUT ──────────────────────────
+function renderInput(){
+  const book=BOOKS.find(b=>b.n===S.selBook),maxCh=book?book.c:1;
+  const chOpts=Array.from({length:maxCh},(_,i)=>`<option value="${i+1}"${S.selCh===i+1?' selected':''}>${i+1}장</option>`).join('');
+  const chips=S.verses.length
+    ?S.verses.map((vv,i)=>`
+      <div class="verse-chip">
+        <span><span class="chip-ref">${h(vv.ref)}</span><span class="chip-sub">· 문제 5개</span></span>
+        <button class="v-del" data-idx="${i}">×</button>
+      </div>`).join('')
+    :`<div class="empty-note">아직 추가된 구절이 없습니다</div>`;
+
+  const listHtml=renderListPanel('input');
+
+  return`
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-left">📖 구절 선택</div></div>
+      <div class="row">
+        <div class="field book-wrap">
+          <label>책 이름 (초성 또는 이름)</label>
+          <input type="text" id="bSearch" placeholder="예: ㅇㅎ, 요한복음..." value="${v(S.search)}" autocomplete="off">
+        </div>
+        <div class="field sm"><label>장</label>
+          <select id="chSel" ${!S.selBook?'disabled':''}>${chOpts}</select>
+        </div>
+        <div class="field xs"><label>절</label>
+          <input type="number" id="vSel" min="1" max="200" value="${S.selV}" ${!S.selBook?'disabled':''}>
+        </div>
+        <div class="field" style="flex:0 0 auto;padding-top:18px">
+          <button class="btn-add" id="addBtn" ${!S.selBook?'disabled':''}>추가</button>
+        </div>
+      </div>
+      ${S.selBook?`<div class="sel-hint">선택: <strong style="color:var(--forest)">${h(S.selBook)}</strong> · 전 ${maxCh}장</div>`:''}
+      ${S.errMsg?`<div class="err-msg">${h(S.errMsg)}</div>`:''}
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-left">📋 선택한 구절 <span style="font-weight:400;color:var(--muted)">(최대 20개)</span></div></div>
+      <div class="verse-list">${chips}</div>
+      ${S.verses.length?`<div class="count-line">${S.verses.length}/20 · 총 ${S.verses.length*5}문제</div>`:''}
+    </div>
+
+    ${listHtml ? `<div class="card">
+      <div class="card-hd"><div class="card-hd-left">📚 저장된 문제 리스트</div></div>
+      ${listHtml}
+    </div>` : ''}
+
+    <div class="gen-wrap">
+      <button class="btn-gen" id="genBtn" ${S.verses.length===0?'disabled':''}>
+        문제 생성 ${S.verses.length>0?`(${S.verses.length*5}문제)`:''}
+      </button>
+    </div>`;
+}
+
+function setupInput(){
+  const bs=$('bSearch'),ch=$('chSel'),vs=$('vSel'),ab=$('addBtn'),gb=$('genBtn');
+  if(bs){
+    bs.addEventListener('input',e=>{
+      S.search=e.target.value;
+      if(S.selBook&&S.search!==S.selBook){S.selBook=null;if(ab)ab.disabled=true;if(ch)ch.disabled=true;if(vs)vs.disabled=true;document.querySelector('.sel-hint')?.remove();document.querySelector('.err-msg')?.remove();}
+      buildDrop();
+    });
+    bs.addEventListener('focus',()=>{if(S.search)buildDrop();});
+    bs.addEventListener('blur',()=>{setTimeout(hideDrop,160);});
+  }
+  if(ch)ch.addEventListener('change',e=>{S.selCh=+e.target.value;});
+  if(vs)vs.addEventListener('input',e=>{S.selV=Math.max(1,+e.target.value||1);});
+  if(ab)ab.addEventListener('click',addVerse);
+  if(gb)gb.addEventListener('click',generate);
+  document.querySelectorAll('.v-del[data-idx]').forEach(btn=>{btn.addEventListener('click',()=>removeVerse(+btn.dataset.idx));});
+}
+
+function selectBook(name){
+  S.selBook=name;S.search=name;S.selCh=1;S.selV=1;hideDrop();
+  const inp=$('bSearch');if(inp)inp.value=name;
+  const ab=$('addBtn'),ch=$('chSel'),vs=$('vSel');
+  if(ab)ab.disabled=false;if(vs){vs.disabled=false;vs.value=1;}
+  if(ch){
+    const book=BOOKS.find(b=>b.n===name),maxCh=book?book.c:1;
+    ch.innerHTML=Array.from({length:maxCh},(_,i)=>`<option value="${i+1}">${i+1}장</option>`).join('');
+    ch.disabled=false;S.selCh=1;S.selV=1;
+    let hint=document.querySelector('.sel-hint');
+    const ht=`선택: <strong style="color:var(--forest)">${h(name)}</strong> · 전 ${maxCh}장`;
+    if(hint){hint.innerHTML=ht;}else{const row=document.querySelector('.book-wrap')?.closest('.row');if(row){const el=document.createElement('div');el.className='sel-hint';el.innerHTML=ht;row.after(el);}}
+  }
+}
+
+// ── LOADING ────────────────────────
+function renderLoading(){
+  return`<div class="card"><div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-t">개역개정 원문 조회 & 문제 생성 중...</div>
+    <div class="loading-s">Claude API가 구절을 확인하고 빈칸 문제를 만들고 있습니다<br>
+      <span id="lMsg" style="color:var(--forest);font-weight:700">${h(S.loadMsg)}</span></div>
+    <div class="loading-prog"><div class="loading-prog-fill"></div></div>
+  </div></div>`;
+}
+
+// ── QUIZ ───────────────────────────
+function renderQuiz(){
+  const total=S.questions.length,q=S.questions[S.qIdx];
+  if(!q)return`<div class="card"><div class="empty-note">문제 데이터 오류</div></div>`;
+  const pct=Math.round(((S.qIdx+1)/total)*100);
+  const ins=S.inputs[S.qIdx]||[];
+  const parts=q.blankedText.split('_____');
+  let qHtml='';
+  parts.forEach((part,i)=>{
+    qHtml+=`<span>${h(part)}</span>`;
+    if(i<parts.length-1){
+      const val=ins[i]||'';let cls='blank-inp',hint='';
+      if(S.revealed){const ok=normAns(val)===normAns(q.answers[i]||'');cls+=ok?' inp-ok':' inp-err';hint=ok?`<span class="ans-hint ok">✓</span>`:`<span class="ans-hint err">${h(q.answers[i]||'')}</span>`;}
+      const w=Math.max(76,Math.max(val.length,(q.answers[i]||'').length)*18+20);
+      qHtml+=`<input class="${cls}" type="text" data-qi="${S.qIdx}" data-bi="${i}" value="${v(val)}" placeholder="${S.revealed?'':'?'}" style="width:${w}px" ${S.revealed?'readonly':''}>${hint}`;
+    }
+  });
+  let banner='';
+  if(S.revealed&&S.score){
+    const sp=Math.round((S.score.correct/S.score.total)*100);
+    banner=`<div class="score-banner"><div class="sb-pct">${sp}%</div><div><div class="sb-msg">${scoreMsg(sp)}</div><div class="sb-det">${S.score.correct}/${S.score.total} 정답</div></div></div>`;
+  }
+  const fv=S.revealed?`<div class="full-verse"><div class="fv-lbl">📖 개역개정 원문</div>${h(q.verseText)}</div>`:'';
+  const sc=S.revealed?'act-btn act-done':'act-btn act-score';
+  const sl=S.revealed?'✓ 점수 확인':'점수 공개';
+
+  const lists=getLists();
+  const canSave=lists.length<MAX_LISTS&&S.verses.length>0;
+  const saveLabel=canSave?`목록 저장 (${lists.length}/${MAX_LISTS})`:`목록 저장 (${lists.length}/${MAX_LISTS})`;
+
+  // 리스트 패널 (퀴즈용)
+  const listItems=lists.length
+    ?lists.map(l=>{
+        if(S.editingListId===l.id)return`<div class="list-edit-row" data-lid="${l.id}">
+          <input class="list-edit-inp" id="editInp_${l.id}" value="${v(l.name)}" maxlength="20">
+          <button class="list-edit-ok" data-ok="${l.id}">저장</button>
+          <button class="list-edit-cancel" data-cancel="${l.id}">취소</button>
+        </div>`;
+        return`<div class="list-item" data-load="${l.id}">
+          <div class="list-item-info">
+            <div class="list-item-name">${h(l.name)}</div>
+            <div class="list-item-meta">구절 ${l.verses.length}개 · 문제 ${l.verses.length*5}개</div>
+          </div>
+          <div class="list-item-btns" onclick="event.stopPropagation()">
+            <button class="list-icon-btn" data-edit="${l.id}" title="이름 수정">✏️</button>
+            <button class="list-icon-btn" data-update="${l.id}" title="현재 구절로 덮어쓰기">🔄</button>
+            <button class="list-icon-btn del" data-del="${l.id}" title="삭제">×</button>
+          </div>
+        </div>`;
+      }).join('')
+    :`<div class="list-empty">저장된 목록이 없습니다</div>`;
+
+  return`
+    <div class="card">
+      ${banner}
+      <div class="quiz-toprow">
+        <span class="q-count">문제 ${S.qIdx+1} / ${total}</span>
+        <span class="ref-pill">${h(q.ref)}</span>
+      </div>
+      <div class="prog-rail"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <div class="q-verse" id="qVerse">${qHtml}</div>
+      ${fv}
+      <div class="nav-row">
+        <button class="btn-nav" id="prevBtn" ${S.qIdx===0?'disabled':''}>← 이전</button>
+        <span class="nav-num">${S.qIdx+1} / ${total}</span>
+        <button class="btn-nav" id="nextBtn" ${S.qIdx===total-1?'disabled':''}>다음 →</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-hd-left">📚 저장된 문제 리스트</div></div>
+      <div class="list-panel" id="listPanel">${listItems}</div>
+      <div class="actions">
+        <div class="act-col">
+          <button class="${sc}" id="revealBtn">${sl}</button>
+          <span class="act-desc">${S.revealed?`${S.score?.correct}/${S.score?.total} 정답`:'전체 채점 결과를 확인합니다'}</span>
+        </div>
+        <div class="act-col">
+          <button class="act-btn act-save" id="saveListBtn" ${!canSave?'disabled':''} style="${!canSave?'':''}">📌 ${saveLabel}</button>
+          <span class="act-desc">현재 구절 목록을 저장합니다</span>
+        </div>
+        <div class="act-col">
+          <button class="act-btn" id="retryBtn">재도전</button>
+          <span class="act-desc">빈칸 위치를 새로 섞어 다시 도전합니다</span>
+        </div>
+        <div class="act-col">
+          <button class="act-btn" id="resetBtn">구절 재설정</button>
+          <span class="act-desc">외울 구절을 처음부터 바꿉니다</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function setupQuiz(){
+  $('qVerse')?.addEventListener('input',e=>{
+    if(!e.target.classList.contains('blank-inp'))return;
+    const qi=+e.target.dataset.qi,bi=+e.target.dataset.bi;
+    if(!S.inputs[qi])S.inputs[qi]=[];
+    S.inputs[qi][bi]=e.target.value;
+    e.target.style.width=Math.max(76,e.target.value.length*18+20)+'px';
+  });
+  $('prevBtn')?.addEventListener('click',()=>navigate(-1));
+  $('nextBtn')?.addEventListener('click',()=>navigate(1));
+  $('revealBtn')?.addEventListener('click',revealScore);
+  $('retryBtn')?.addEventListener('click',retry);
+  $('resetBtn')?.addEventListener('click',resetAll);
+}
+
+// ── SCORE ──────────────────────────
+function renderScore(){
+  const sc=S.score||{correct:0,total:0};
+  const pct=sc.total>0?Math.round((sc.correct/sc.total)*100):0;
+  return`<div class="card"><div class="score-page">
+    <div class="score-ring"><div class="score-pct">${pct}%</div><div class="score-frac">${sc.correct}/${sc.total}</div></div>
+    <div class="score-msg">${scoreMsg(pct)}</div>
+    <div class="score-det">${sc.correct}개 정답 · 전체 ${sc.total}개 빈칸</div>
+    <div class="score-btns">
+      <button class="btn-retry" id="retryBtn2">재도전</button>
+      <button class="btn-reset" id="resetBtn2">구절 재설정</button>
+    </div>
+  </div></div>`;
+}
+function setupScore(){
+  $('retryBtn2')?.addEventListener('click',retry);
+  $('resetBtn2')?.addEventListener('click',resetAll);
+}
+
+// ═══════════════════════════════════
+// LIST EVENT BINDING (공용)
+// ═══════════════════════════════════
+function bindListEvents(){
+  // 목록 저장 버튼
+  $('saveListBtn')?.addEventListener('click',()=>{
+    const name=prompt('저장할 목록 이름을 입력하세요 (최대 20자):',`목록 ${getLists().length+1}`);
+    if(name===null)return; // 취소
+    if(!addList(name,S.verses)){alert('목록은 최대 3개까지 저장할 수 있습니다.');return;}
+    render();
+  });
+
+  // 목록 클릭 → 로드
+  document.querySelectorAll('.list-item[data-load]').forEach(el=>{
+    el.addEventListener('click',()=>loadList(+el.dataset.load));
+  });
+
+  // 수정 버튼 (인라인 편집 모드)
+  document.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.addEventListener('click',()=>{S.editingListId=+btn.dataset.edit;render();setTimeout(()=>{const inp=$(`editInp_${S.editingListId}`);if(inp){inp.focus();inp.select();}},50);});
+  });
+
+  // 수정 저장
+  document.querySelectorAll('[data-ok]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=+btn.dataset.ok;
+      const inp=$(`editInp_${id}`);
+      if(inp&&inp.value.trim())renameList(id,inp.value.trim());
+      S.editingListId=null;render();
+    });
+  });
+
+  // 수정 취소
+  document.querySelectorAll('[data-cancel]').forEach(btn=>{
+    btn.addEventListener('click',()=>{S.editingListId=null;render();});
+  });
+
+  // 수정 입력에서 Enter
+  document.querySelectorAll('.list-edit-inp').forEach(inp=>{
+    inp.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){const id=+inp.closest('[data-lid]').dataset.lid;if(inp.value.trim())renameList(id,inp.value.trim());S.editingListId=null;render();}
+      if(e.key==='Escape'){S.editingListId=null;render();}
+    });
+  });
+
+  // 덮어쓰기 (🔄)
+  document.querySelectorAll('[data-update]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=+btn.dataset.update;
+      if(!S.verses.length){alert('현재 선택된 구절이 없습니다.');return;}
+      const lists=getLists();
+      const l=lists.find(l=>l.id===id);
+      if(!confirm(`"${l?.name}" 목록을 현재 구절(${S.verses.length}개)로 덮어쓸까요?`))return;
+      updateListVerses(id,S.verses);render();
+    });
+  });
+
+  // 삭제
+  document.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const lists=getLists();
+      const l=lists.find(l=>l.id===+btn.dataset.del);
+      if(!confirm(`"${l?.name}" 목록을 삭제할까요?`))return;
+      deleteList(+btn.dataset.del);
+      if(S.editingListId===+btn.dataset.del)S.editingListId=null;
+      render();
+    });
+  });
+}
+
+// ═══════════════════════════════════
+// HANDLERS
+// ═══════════════════════════════════
+function addVerse(){
+  S.errMsg='';
+  if(!S.selBook)return;
+  if(S.verses.length>=20){showErr('최대 20개까지 추가할 수 있습니다.');return;}
+  const ch=+(  $('chSel')?.value)||S.selCh;
+  const vv=Math.max(1,+($('vSel')?.value)||S.selV);
+  S.selCh=ch;S.selV=vv;
+  const ref=`${S.selBook} ${ch}장 ${vv}절`;
+  if(S.verses.some(x=>x.ref===ref)){showErr('이미 추가된 구절입니다.');return;}
+  S.verses.push({ref});S.errMsg='';render();
+}
+function showErr(msg){
+  let el=document.querySelector('.err-msg');
+  if(el){el.textContent=msg;return;}
+  el=document.createElement('div');el.className='err-msg';el.textContent=msg;
+  const after=document.querySelector('.sel-hint')||document.querySelector('.book-wrap')?.closest('.row');
+  if(after)after.after(el);
+}
+function removeVerse(idx){S.verses.splice(idx,1);render();}
+
+async function loadList(id){
+  const lists=getLists();
+  const l=lists.find(l=>l.id===id);
+  if(!l||!l.verses.length){alert('이 목록에 구절이 없습니다.');return;}
+  if(!API_KEY){alert('먼저 API Key를 입력하고 저장해주세요.');return;}
+  S.verses=l.verses.map(v=>({ref:v.ref}));
+  S.phase='loading';S.loadMsg=`"${l.name}" 불러오는 중...`;render();
+  try{
+    S.questions=await fetchAll(S.verses);
+    S.qIdx=0;S.inputs={};S.revealed=false;S.score=null;S.phase='quiz';render();
+  }catch(e){S.phase='input';S.errMsg='문제 생성 오류: '+e.message;render();}
+}
+
+async function generate(){
+  if(!S.verses.length)return;
+  if(!API_KEY){alert('먼저 API Key를 입력하고 저장해주세요.');return;}
+  S.phase='loading';S.loadMsg='';render();
+  try{
+    S.questions=await fetchAll(S.verses);
+    S.qIdx=0;S.inputs={};S.revealed=false;S.score=null;S.phase='quiz';render();
+  }catch(e){S.phase='input';S.errMsg='문제 생성 오류: '+e.message;render();}
+}
+
+function navigate(d){S.qIdx=Math.max(0,Math.min(S.questions.length-1,S.qIdx+d));render();}
+
+function revealScore(){
+  if(S.revealed){S.phase='score';render();return;}
+  let correct=0,total=0;
+  S.questions.forEach((q,qi)=>{const ins=S.inputs[qi]||[];(q.answers||[]).forEach((ans,bi)=>{total++;if(normAns(ins[bi])===normAns(ans))correct++;});});
+  S.score={correct,total};S.revealed=true;S.qIdx=0;render();
+}
+
+async function retry(){
+  if(!API_KEY){alert('먼저 API Key를 입력하고 저장해주세요.');return;}
+  S.phase='loading';S.loadMsg='새 문제를 생성합니다...';render();
+  try{
+    S.questions=await fetchAll(S.verses);
+    S.qIdx=0;S.inputs={};S.revealed=false;S.score=null;S.phase='quiz';render();
+  }catch(e){S.phase='input';S.errMsg='재도전 오류: '+e.message;render();}
+}
+
+function resetAll(){
+  S={phase:'input',verses:S.verses,search:'',selBook:null,selCh:1,selV:1,
+     questions:[],qIdx:0,inputs:{},revealed:false,score:null,errMsg:'',loadMsg:'',editingListId:null};
+  render();
+}
+
+// ═══════════════════════════════════
+// API
+// ═══════════════════════════════════
+async function callAPI(prompt,maxTokens=4000){
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(`API ${res.status}: ${e.error?.message||res.statusText}`);}
+  const d=await res.json();return(d.content||[]).map(c=>c.text||'').join('');
+}
+function parseJSON(raw){
+  const clean=raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  const m=clean.match(/\{[\s\S]*\}/);
+  if(!m)throw new Error('응답 파싱 실패. 다시 시도해주세요.');
+  try{return JSON.parse(m[0]);}catch{throw new Error('JSON 파싱 오류. 다시 시도해주세요.');}
+}
+
+async function fetchAll(verses){
+  const BATCH=3;
+  const batches=[];
+  for(let i=0;i<verses.length;i+=BATCH) batches.push(verses.slice(i,i+BATCH));
+  S.loadMsg=`${batches.length}개 배치 동시 처리 중...`;
+  const lEl=$('lMsg');if(lEl)lEl.textContent=S.loadMsg;
+  // Promise.all로 모든 배치를 동시에 병렬 호출
+  const results=await Promise.all(batches.map(batch=>fetchBatch(batch)));
+  return results.flat();
+}
+
+async function fetchBatch(verses){
+  const raw=await callAPI(`아래 성경 구절들의 개역개정(KRV) 원문을 제공하고, 각 구절마다 빈칸 채우기 문제를 5개씩 생성하세요.
+
+[구절 목록]
+${verses.map(vv=>`- ${vv.ref}`).join('\n')}
+
+[빈칸 규칙]
+1. 빈칸 단위: 띄어쓰기 기준 단어+조사 (예: "예수께서", "목욕한", "발을", "깨끗하니라")
+2. 빈칸 개수: 원문 단어 수 기준 — 5개 이하→3개, 6~9개→4개, 10~14개→5개, 15개 이상→6개
+3. 인접 빈칸 금지: _____ _____ 연속 불가, 빈칸 사이에 반드시 단어 존재
+4. 문제 다양성: 인접한 두 문제의 공통 빈칸 위치 최대 1개
+5. blankedText의 _____ 개수와 answers 배열 길이 반드시 일치
+
+순수 JSON만 출력 (마크다운 없이):
+{"verses":[{"reference":"책이름 N장 M절","text":"개역개정 원문(책·장·절 제외)","questions":[{"blankedText":"_____ 포함 텍스트","answers":["답1","답2"]},{"blankedText":"...","answers":["..."]}]}]}`,4000);
+
+  const parsed=parseJSON(raw);
+  const out=[];
+  for(const vv of (parsed.verses||[])){
+    const verseText=vv.text||'';
+    const target=getBlankCount(verseText);
+    const final=[];
+    for(const q of (vv.questions||[])){
+      const bt=(q.blankedText||'').replace(/_{3,}/g,'_____');
+      const cnt=cntBlanks(bt);
+      const ans=(q.answers||[]).slice(0,cnt);
+      while(ans.length<cnt)ans.push('?');
+      if(cnt===target){final.push({ref:vv.reference,verseText,blankedText:bt,answers:ans});}
+      else{final.push(null);}
+    }
+    const nullCnt=final.filter(q=>q===null).length;
+    const jsExtras=nullCnt>0?jsGenQuestions(verseText,vv.reference,nullCnt):[];
+    let ji=0;
+    const corrected=final.map(q=>q!==null?q:jsExtras[ji++]||jsGenQuestions(verseText,vv.reference,1)[0]);
+    while(corrected.length<5)corrected.push(...jsGenQuestions(verseText,vv.reference,1));
+    out.push(...corrected.slice(0,5));
+  }
+  if(!out.length)throw new Error('문제 데이터 없음. 다시 시도해주세요.');
+  return out;
+}
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+setupApiKey();
+render();
+</script>
+</body>
+</html>
