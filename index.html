@@ -175,21 +175,22 @@ input[type=number]::-webkit-inner-spin-button{opacity:.5}
 .btn-reset{background:#fff;border:1.5px solid var(--border);color:var(--text);padding:12px 30px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Nanum Gothic',sans-serif;transition:all .15s}
 .btn-reset:hover{border-color:var(--forest);color:var(--forest)}
 
-@media(max-width:500px){
-<<<<<<< HEAD
-  /* 구절 선택 입력 폼: 세로 1열 배치 */
-  .row{flex-direction:column;gap:6px}
-  .field.sm,.field.xs,.field{flex:1 1 auto;width:100%}
-  .field.book-wrap{width:100%}
+@media(max-width:600px){
+  /* 구절 선택 폼 — 완전 세로 1열 */
+  .row{flex-direction:column !important;gap:8px !important;align-items:stretch !important}
+  .field,.field.sm,.field.xs,.field.book-wrap{
+    flex:none !important;width:100% !important;min-width:0 !important;
+  }
+  /* 라벨 한 줄로 */
+  label{white-space:nowrap;font-size:11px}
   /* 추가 버튼 전체 너비 */
-  .btn-add{width:100%;padding:11px 16px}
-  /* 퀴즈 폰트 */
-=======
-  .row{flex-wrap:wrap}.field.sm,.field.xs{flex:1 1 70px}
->>>>>>> 37bd48283edbc883b75d107434fce48282a8f267
+  .btn-add{width:100% !important;padding:12px 16px;margin-top:2px}
+  /* 입력창 높이 키우기 (터치 편의) */
+  input,select{padding:12px 11px;font-size:15px}
+  /* 퀴즈 */
   .q-verse{font-size:17px}.blank-inp{font-size:17px;min-width:62px;width:62px}
   .actions{gap:6px}.act-btn{font-size:12px;padding:9px 4px}
-  .btn-gen{padding:13px 32px;font-size:14px}
+  .btn-gen{padding:13px 32px;font-size:14px;width:100%}
 }
 .fade-in{animation:fadein .3s ease}
 @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -470,8 +471,8 @@ function renderInput(){
       <div class="card-hd"><div class="card-hd-left">📖 구절 선택</div></div>
       <div class="row">
         <div class="field book-wrap">
-          <label>책 이름 (초성 또는 이름)</label>
-          <input type="text" id="bSearch" placeholder="예: ㅇㅎ, 요한복음..." value="${v(S.search)}" autocomplete="off">
+          <label>책 이름</label>
+          <input type="text" id="bSearch" placeholder="예: ㅇㅎ, 요한..." value="${v(S.search)}" autocomplete="off">
         </div>
         <div class="field sm"><label>장</label>
           <select id="chSel" ${!S.selBook?'disabled':''}>${chOpts}</select>
